@@ -1,0 +1,54 @@
+use std::fs::File;
+use std::io::{self, BufRead};
+
+fn calculate_quality(subtitles: &[String]) -> f64 {
+    let mut total_length = 0;
+    let mut total_overlap = 0;
+
+    for i in 0..subtitles.len() {
+        let subtitle1 = &subtitles[i];
+
+        // Calculate the length of the current subtitle
+        let subtitle_length = subtitle1.chars().count();
+
+        total_length += subtitle_length;
+
+        for j in (i + 1)..subtitles.len() {
+            let subtitle2 = &subtitles[j];
+
+            // Calculate the length of the overlapping region
+            let overlap = subtitle1.chars().zip(subtitle2.chars()).take_while(|(c1, c2)| c1 == c2).count();
+
+            total_overlap += overlap;
+        }
+    }
+
+    if total_length == 0 {
+        return 0.0;
+    }
+
+    // Calculate the quality as the ratio of overlapping characters to total characters
+    let quality = total_overlap as f64 / total_length as f64;
+    quality
+}
+
+fn main() -> io::Result<()> {
+    // Read subtitles from a file
+    let file = File::open("subtitles.txt")?;
+    let reader = io::BufReader::new(file);
+
+    let mut subtitles = Vec::new();
+
+    for line in reader.lines() {
+        if let Ok(subtitle) = line {
+            subtitles.push(subtitle);
+        }
+    }
+
+    // Calculate the quality of the subtitles
+    let quality = calculate_quality(&subtitles);
+
+    println!("Subtitle quality: {:.2}%", quality * 100.0);
+
+    Ok(())
+}
